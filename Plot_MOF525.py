@@ -229,7 +229,10 @@ for Intermediates in zip(['H','OH'],['COOH','O']):
 
         
         plt.xticks(fontsize=size2)
-        plt.yticks(fontsize=size2)
+        if Intermediates[0]=='H':
+            plt.yticks([-1,0,1],['-1','0','1'],fontsize=size2)
+        else:
+            plt.yticks(fontsize=size2)
         plt.xlabel('$\Delta$E$_{%s^*}$ [eV]' % Intermediates[0],fontsize=size1-4)
         plt.ylabel('$\Delta$E$_{%s^*}$ [eV]' % Intermediates[1],fontsize=size1-4)
         
@@ -250,7 +253,10 @@ for Intermediates in zip(['H','OH'],['COOH','O']):
         cbar.set_label('dist [Ang]', fontsize=size1)
         
         plt.xticks(fontsize=size2)
-        plt.yticks(fontsize=size2)
+        if Intermediates[0]=='H':
+            plt.yticks([-1,0,1],['-1','0','1'],fontsize=size2)
+        else:
+            plt.yticks(fontsize=size2)
         plt.xlabel('$\Delta$E$_{%s^*}$ [eV]' % Intermediates[0],fontsize=size1)
         plt.ylabel('$\Delta$E$_{%s^*}$ [eV]' % Intermediates[1],fontsize=size1)
         plt.savefig(Iron+'Fe_with_'+Intermediates[0]+'vs'+Intermediates[1]+'_dist.png', dpi=400, bbox_inches='tight')

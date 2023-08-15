@@ -374,6 +374,6 @@ plt.ylim([0,0.8])
 plt.xlim([-1.5,2.0])
 #plt.axis([-1, 1, -1, 10])
 #plt.savefig(Iron+'Fe_with_'+Intermediates+'_SPIN.png', dpi=400, bbox_inches='tight')
-#plt.savefig('3Fe_with_SPIN_potential_map.png', dpi=400, bbox_inches='tight')
+plt.savefig('3Fe_with_SPIN_potential_map.png', dpi=400, bbox_inches='tight')
 plt.show()
      
