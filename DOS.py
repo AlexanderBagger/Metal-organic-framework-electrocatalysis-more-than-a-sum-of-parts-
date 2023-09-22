@@ -104,19 +104,19 @@ mylist1=['NU-Por-4P-ftw_RPBE_bulk_PW500_3Cr_s1_s1_s1.gpw_SPIN1.csv','NU-Por-4P-f
          'NU-Por-4P-ftw_RPBE_bulk_PW500_3Zn_s1_s1_s1.gpw_SPIN1.csv','NU-Por-4P-ftw_RPBE_bulk_PW500_3Rh_s1_s1_s1.gpw_SPIN1.csv',
          'NU-Por-4P-ftw_RPBE_bulk_PW500_3Pd_s1_s1_s1.gpw_SPIN1.csv', 'NU-Por-4P-ftw_RPBE_bulk_PW500_3Ir_s1_s1_s1.gpw_SPIN1.csv','NU-Por-4P-ftw_RPBE_bulk_PW500_3Pt_s1_s1_s1.gpw_SPIN1.csv']
 
-mylist0=['NU-Por-4P-ftw_RPBE_bulk_PW500_3Mn_s1_s1_s1.gpw_SPIN0.csv',
+mylist0=['NU-Por-4P-ftw_RPBE_bulk_PW500_3Mn_s1_s1_s1.gpw_SPIN0.csv','NU-Por-4P-ftw_RPBE_bulk_PW500_3Fe_s1_s1_s1.gpw_SPIN0.csv',
          'NU-Por-4P-ftw_RPBE_bulk_PW500_3Co_s1_s1_s1.gpw_SPIN0.csv','NU-Por-4P-ftw_RPBE_bulk_PW500_3Ni_s1_s1_s1.gpw_SPIN0.csv','NU-Por-4P-ftw_RPBE_bulk_PW500_3Cu_s1_s1_s1.gpw_SPIN0.csv',
          'NU-Por-4P-ftw_RPBE_bulk_PW500_3Zn_s1_s1_s1.gpw_SPIN0.csv','NU-Por-4P-ftw_RPBE_bulk_PW500_3Rh_s1_s1_s1.gpw_SPIN0.csv',
          'NU-Por-4P-ftw_RPBE_bulk_PW500_3Pd_s1_s1_s1.gpw_SPIN0.csv', 'NU-Por-4P-ftw_RPBE_bulk_PW500_3Ir_s1_s1_s1.gpw_SPIN0.csv','NU-Por-4P-ftw_RPBE_bulk_PW500_3Pt_s1_s1_s1.gpw_SPIN0.csv']
 
 
-mylist1=['NU-Por-4P-ftw_RPBE_bulk_PW500_3Mn_s1_s1_s1.gpw_SPIN1.csv',
+mylist1=['NU-Por-4P-ftw_RPBE_bulk_PW500_3Mn_s1_s1_s1.gpw_SPIN1.csv','NU-Por-4P-ftw_RPBE_bulk_PW500_3Fe_s1_s1_s1.gpw_SPIN1.csv',
          'NU-Por-4P-ftw_RPBE_bulk_PW500_3Co_s1_s1_s1.gpw_SPIN1.csv','NU-Por-4P-ftw_RPBE_bulk_PW500_3Ni_s1_s1_s1.gpw_SPIN1.csv','NU-Por-4P-ftw_RPBE_bulk_PW500_3Cu_s1_s1_s1.gpw_SPIN1.csv',
          'NU-Por-4P-ftw_RPBE_bulk_PW500_3Zn_s1_s1_s1.gpw_SPIN1.csv','NU-Por-4P-ftw_RPBE_bulk_PW500_3Rh_s1_s1_s1.gpw_SPIN1.csv',
          'NU-Por-4P-ftw_RPBE_bulk_PW500_3Pd_s1_s1_s1.gpw_SPIN1.csv', 'NU-Por-4P-ftw_RPBE_bulk_PW500_3Ir_s1_s1_s1.gpw_SPIN1.csv','NU-Por-4P-ftw_RPBE_bulk_PW500_3Pt_s1_s1_s1.gpw_SPIN1.csv']
 
 
-names=['Mn','Co','Ni','Cu','Zn','Rh','Pd','Ir','Pt']
+names=['Mn','Fe','Co','Ni','Cu','Zn','Rh','Pd','Ir','Pt']
 
 
 def find_nearest(array, value):
@@ -127,7 +127,7 @@ def find_nearest(array, value):
 # Density of States
 plt.figure()
 plt.figure(figsize=(7,8));
-plt.text(-1.25, 9.2, r'$\bf{a}$', ha='left', fontsize=size1)
+plt.text(-1.25, 10.2, r'$\bf{a}$', ha='left', fontsize=size1)
 for k in range(0,len(mylist0)):
         name1=folder+mylist0[k]
         data1=genfromtxt(name1,delimiter=',')
@@ -164,7 +164,7 @@ plt.plot([0,0],[-10,20],'k--')
 plt.ylabel('DOS', fontsize=size1)
 plt.xlabel('Energy [eV]', fontsize=size1)
 #plt.legend(loc=1,fontsize=size2)
-plt.axis([-1, 1, -0.1, 9.1])
+plt.axis([-1, 1, -0.1, 10.1])
 plt.savefig('Plot_DOS_Metals_Spin.png', dpi=600, bbox_inches='tight')
 
 

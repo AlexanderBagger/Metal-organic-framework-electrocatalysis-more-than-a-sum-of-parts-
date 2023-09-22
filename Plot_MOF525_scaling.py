@@ -13,6 +13,7 @@ import ase.db
 from ase.db import connect
 import os
 from scipy import stats
+from sklearn.metrics import mean_absolute_error as mae
 
 ###############################################################################
 ###   molecules
@@ -21,6 +22,8 @@ db = ase.db.connect('data/molecules.db')
 EH=db.get(mol='H2').energy*0.5
 ECO=db.get(mol='CO').energy
 EH2O=db.get(mol='H2O').energy
+
+ECO2=db.get(mol='CO2').energy
 
 
 ###############################################################################
@@ -62,6 +65,7 @@ for Intermediates in intermediates:
                 Energy_con1.append(row.energy-ESlab+3*EH-2*EH2O)
             elif Intermediates=='COOH':
                 Energy_con1.append(row.energy-ESlab-ECO-EH2O+EH)
+                #Energy_con1.append(row.energy-ESlab-ECO2-EH)
                 
             BG_con1.append(row.bandgap)
             Metal_con1.append(row.metal)
@@ -128,8 +132,15 @@ mx=np.max(x)
 x1=np.linspace(mn,mx,500)
 y1=gradient*x1+intercept
 plt.plot(x1,y1,'-b')
-plt.text(x1[-1]-1.5,y1[-1]-0.5,str(np.round(gradient,1))+'x'+str(np.round(intercept,1))+'\n $r^2$=' +str(np.round(r_value,1)),fontsize=size2-4)
-            
+y2=gradient*np.asarray(x)+intercept
+error = mae(y, y2)
+plt.text(x1[-1]-1.8,y1[-1]-0.8,str(np.round(gradient,1))+'x+'+str(np.round(intercept,1))+'\n'+'$r^2$=' +str(np.round(r_value,1))+',\n'+'MAE='+str(np.round(error,2)),fontsize=size2-4)
+
+# plt.annotate('CO2 reference', xy=(0.03, 0.9), xycoords='axes fraction', fontsize=size2-4,
+#                          bbox=dict(boxstyle='round',facecolor='white', alpha=1.0),
+#                          horizontalalignment='left', verticalalignment='bottom')    
+
+
 plt.xticks(fontsize=size2)
 plt.yticks(fontsize=size2)
 plt.xlabel('$\Delta$E$_{H^*}$ [eV]',fontsize=size1)
@@ -141,7 +152,7 @@ plt.savefig('MOF525_Metals_COOH_vs_H.png', dpi=400, bbox_inches='tight')
 ###   O vs OH
 ##############################################################################
 plt.figure()
-plt.text(0.25, 5.5, r'$\bf{c}$', ha='left', fontsize=size1)
+plt.text(0.25, 5.5, r'$\bf{d}$', ha='left', fontsize=size1)
 x=[]
 y=[]
 z=[]
@@ -164,7 +175,11 @@ mx=np.max(x)
 x1=np.linspace(mn,mx,500)
 y1=gradient*x1+intercept
 plt.plot(x1,y1,'-b')
-plt.text(x1[-1]-0.5,y1[-1]-2.0,str(np.round(gradient,1))+'x+'+str(np.round(intercept,1))+'\n $r^2$=' +str(np.round(r_value,1)), fontsize=size2-4, color='blue')
+
+y2=gradient*np.asarray(x)+intercept
+error = mae(y, y2)
+
+plt.text(x1[-1]-0.5,y1[-1]-2.5,str(np.round(gradient,1))+'x+'+str(np.round(intercept,1))+'\n'+'$r^2$=' +str(np.round(r_value,1))+',\n'+'MAE='+str(np.round(error,2)), fontsize=size2-4, color='blue')
 
 gradient, intercept, r_value, p_value, std_err = stats.linregress(x,z)
 mn=np.min(x)
@@ -172,7 +187,9 @@ mx=np.max(x)
 x1=np.linspace(mn,mx,500)
 y1=gradient*x1+intercept
 plt.plot(x1,y1,'-k')
-plt.text(x1[-1]-1.5,y1[-1]-0.8,str(np.round(gradient,1))+'x+'+str(np.round(intercept,1))+'\n $r^2$=' +str(np.round(r_value,1)),fontsize=size2-4)
+y2=gradient*np.asarray(x)+intercept
+error = mae(z, y2)
+plt.text(x1[-1]-1.9,y1[-1]-0.7,str(np.round(gradient,1))+'x+'+str(np.round(intercept,1))+'\n'+'$r^2$=' +str(np.round(r_value,1))+', '+'MAE='+str(np.round(error,2)),fontsize=size2-4)
 
 plt.xticks([0.5,1,1.5,2.0,2.5],[0.5,1.0,1.5,2.0,2.5],fontsize=size2)
 plt.yticks([2.0,3,4,5],[2.0,3.0,4.0,5.0],fontsize=size2)

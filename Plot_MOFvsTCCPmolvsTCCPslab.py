@@ -14,6 +14,7 @@ from ase.db import connect
 import os
 from scipy import stats
 import pandas as pd
+from sklearn.metrics import mean_absolute_error as mae
 
 # From Fend
 #ESlab=-1908.364500 # Need PW500 number
@@ -198,6 +199,7 @@ for Intermed in intermediates:
     mx=np.max(x)
     x1=np.linspace(mn,mx,500)
     y1=gradient*x1+intercept
+    y2=gradient*x1+intercept
     plt.plot(x1,y1,'-b')
     plt.text(x1[-1]-1.5,y1[-1]-0.5,str(np.round(gradient,1))+'x+'+str(np.round(intercept,1))+'\n $r^2$=' +str(np.round(r_value,1)))
                 
@@ -310,7 +312,9 @@ for Intermed in ['H', 'COOH', 'OH', 'OOH','O']:
     plt.plot(x1,y1,'-b')
     #plt.text(mn+0.0,np.max(y1)-0.2*(np.max(y1)-np.min(y1)),r'TCCP$_{mol}$'+'\n' + str(np.round(gradient,1))+'MOF525+'+str(np.round(intercept,1))+'\n'+'$r^2$=' +str(np.round(r_value,1)),c='b', fontsize=size2-4)
          
-    plt.annotate(r'TCCP$_{mol}$'+'\n' + str(np.round(gradient,1))+'MOF-525+'+str(np.round(intercept,1))+'\n'+'$r^2$=' +str(np.round(r_value,1)), xy=(0.03, 0.6), xycoords='axes fraction', fontsize=size2-4,c='b',horizontalalignment='left', verticalalignment='bottom')
+    y2=gradient*np.asarray(x)+intercept
+    error = mae(y, y2)
+    plt.annotate(r'TCCP$_{mol}$'+'\n' + str(np.round(gradient,1))+'MOF-525+'+str(np.round(intercept,1))+'\n'+'$r^2$=' +str(np.round(r_value,1))+', MAE=' +str(np.round(error,2)), xy=(0.03, 0.6), xycoords='axes fraction', fontsize=size2-4,c='b',horizontalalignment='left', verticalalignment='bottom')
 
     gradient, intercept, r_value, p_value, std_err = stats.linregress(x,z)
     mn=np.min(x)
@@ -319,8 +323,9 @@ for Intermed in ['H', 'COOH', 'OH', 'OOH','O']:
     y1=gradient*x1+intercept
     plt.plot(x1,y1,'-r')
 #    plt.text(mn+1.0,np.min(y1)+0.2,r'TCCP$_{slab}$'+'\n'+str(np.round(gradient,1))+'MOF525+'+str(np.round(intercept,1))+'\n'+'$r^2$=' +str(np.round(r_value,1)),c='r',fontsize=size2-4)
-    
-    plt.annotate(r'TCCP$_{slab}$'+'\n'+str(np.round(gradient,1))+'MOF-525+'+str(np.round(intercept,1))+'\n'+'$r^2$=' +str(np.round(r_value,1)), xy=(0.53, 0.1), xycoords='axes fraction', fontsize=size2-4,c='r',horizontalalignment='left', verticalalignment='bottom')
+    y2=gradient*np.asarray(x)+intercept
+    error = mae(z, y2)
+    plt.annotate(r'TCCP$_{slab}$'+'\n'+str(np.round(gradient,1))+'MOF-525+'+str(np.round(intercept,1))+'\n'+'$r^2$=' +str(np.round(r_value,1))+', MAE=' +str(np.round(error,2)), xy=(0.53, 0.1), xycoords='axes fraction', fontsize=size2-4,c='r',horizontalalignment='left', verticalalignment='bottom')
     
 
     plt.xticks(fontsize=size2)

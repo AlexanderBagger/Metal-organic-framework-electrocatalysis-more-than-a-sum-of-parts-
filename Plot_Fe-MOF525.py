@@ -34,7 +34,7 @@ iron=['3']
 data_dict={}
 size1=28;size2=20; sdot=150
         
-
+dis_max_test=0.8
 cm = plt.cm.get_cmap('RdYlBu')
 for Intermediates in intermediates:
     for Iron in iron:
@@ -64,59 +64,60 @@ for Intermediates in intermediates:
         Fe_Id=np.empty(int(Iron)); Fe_Bandgap.fill(0)
         
         for row in con1.select(relax='PW'):
-            label_con1.append(row.ads)
-            
-            if Intermediates=='H':
-                Energy_con1.append(row.energy-ESlab-EH)
-            elif Intermediates=='remove_H':
-                Energy_con1.append(row.energy-ESlab+EH)
-            elif Intermediates=='O':
-                Energy_con1.append(row.energy-ESlab+2*EH-EH2O)
-            elif Intermediates=='OH':
-                Energy_con1.append(row.energy-ESlab+EH-EH2O)
-            elif Intermediates=='CO':
-                Energy_con1.append(row.energy-ESlab-ECO)
-            elif Intermediates=='COOH':
-                Energy_con1.append(row.energy-ESlab-ECO-EH2O+EH)
-                
-            BG_con1.append(row.bandgap)
 
 # Getting the distances    
             a = read(name_db+'@relax=PW,ads=%s' % row.ads)
             newpos=a[0].get_positions()
             if (Intermediates=='H' or Intermediates=='O'):
                 distances=np.sum((POS_O-newpos[:-1])**2,1)**(1/2)
+                if distances.max()< dis_max_test:
+                    if Intermediates=='H':
+                        Energy_con1.append(row.energy-ESlab-EH)
+                        dist_max.append(distances.max())
+                        label_con1.append(row.ads)
+                        BG_con1.append(row.bandgap)
+                    elif Intermediates=='O':
+                        Energy_con1.append(row.energy-ESlab+2*EH-EH2O)
+                        dist_max.append(distances.max())
+                        label_con1.append(row.ads)
+                        BG_con1.append(row.bandgap)
+                    
             elif (Intermediates=='CO' or Intermediates=='OH'):
                 distances=np.sum((POS_O-newpos[:-2])**2,1)**(1/2)
-            elif (Intermediates=='COOH' or Intermediates=='OH'):
+                if distances.max()< dis_max_test:
+                    if Intermediates=='OH':
+                        Energy_con1.append(row.energy-ESlab+EH-EH2O)
+                        dist_max.append(distances.max())
+                        label_con1.append(row.ads)
+                        BG_con1.append(row.bandgap)
+                    elif Intermediates=='CO':
+                        Energy_con1.append(row.energy-ESlab-ECO)
+                        dist_max.append(distances.max())
+                        label_con1.append(row.ads)
+                        BG_con1.append(row.bandgap)
+                
+            elif Intermediates=='COOH':
                 distances=np.sum((POS_O-newpos[:-4])**2,1)**(1/2)
+                if distances.max()< dis_max_test:
+                    Energy_con1.append(row.energy-ESlab-ECO-EH2O+EH)
+                    dist_max.append(distances.max())
+                    label_con1.append(row.ads)
+                    BG_con1.append(row.bandgap)
+                    
             elif Intermediates=='remove_H':
                 POS_O=original.get_positions()
                 val=row.ads
                 POS_O=np.delete(POS_O, val, 0)
                 distances=np.sum((POS_O-newpos)**2,1)**(1/2)
+                if distances.max()< dis_max_test:
+                    Energy_con1.append(row.energy-ESlab+EH)
+                    dist_max.append(distances.max())
+                    label_con1.append(row.ads)
+                    BG_con1.append(row.bandgap)
+                
             #print(distances.max())
-            dist_max.append(distances.max())
 
-        # plt.figure()
-        # plt.locator_params(axis='x',nbins=5);plt.grid(True);plt.locator_params(axis='y',nbins=5)
-        # plt.annotate(Iron+'Fe with '+Intermediates, xy=(0.03, 0.9), xycoords='axes fraction', fontsize=size2-4,
-        #              bbox=dict(boxstyle='round',facecolor='white', alpha=1.0),
-        #              horizontalalignment='left', verticalalignment='bottom')
-        # plt.scatter(Energy_con1,BG_con1,c=dist_max, vmin=0, vmax=1, s=sdot, cmap=cm,edgecolors= "black")
 
-       
-        # cbar=plt.colorbar()
-        # cbar.set_label('Max dist [Ang]', fontsize=size1)
-        # plt.xticks(fontsize=size2)
-        # plt.yticks(fontsize=size2)
-        # plt.xlabel('Energy [eV]', fontsize=size1)
-        # plt.ylabel('Direct Bandgap [eV]', fontsize=size1)
-        # #plt.title(Iron+'Fe with ' +Intermediates)
-        # plt.ylim([0,1.5])
-        # #plt.axis([-1, 1, -1, 10])
-        # plt.savefig(Iron+'Fe_with_'+Intermediates+'_SPIN.png', dpi=400, bbox_inches='tight')
-        # plt.show()
         
 # Save values to dictunary
         data_dict[Iron+'_'+Intermediates+'_Label']=label_con1
@@ -199,7 +200,7 @@ for Intermediates in zip(['H','OH'],['COOH','O']):
             zminGab2=10
             id1min=1
             id2min=1
-            distmin=10
+            distmin=2
             for p in range(0,len(data_dict[Iron+'_'+Intermediates[1]+'_Label'])):
                     a1 = read(folder+'MOF525_'+Iron+'Fe_'+Intermediates[0]+'_PW_spin.db@relax=PW,ads=%s' % data_dict[Iron+'_'+Intermediates[0]+'_Label'][k])
                     newpos1=a1[0].get_positions()
@@ -258,9 +259,9 @@ for Intermediates in zip(['H','OH'],['COOH','O']):
     for Iron in iron:
         plt.figure()
         if Intermediates[0]=='H':
-            plt.text(-0.2, 2.95, r'$\bf{c}$ Fe-MOF-525', ha='left', fontsize=size1)
+            plt.text(-0.4, 2.3, r'$\bf{c}$ Fe-MOF-525', ha='left', fontsize=size1)
         else:
-            plt.text(0.1, 5.2, r'$\bf{d}$ Fe-MOF-525', ha='left', fontsize=size1)
+            plt.text(-0.4, 3.65, r'$\bf{d}$ Fe-MOF-525', ha='left', fontsize=size1)
         
         #plt.annotate(Iron+'Fe', xy=(0.03, 0.9), xycoords='axes fraction', fontsize=size2-4,
         #              bbox=dict(boxstyle='round',facecolor='white', alpha=1.0),
@@ -278,13 +279,19 @@ for Intermediates in zip(['H','OH'],['COOH','O']):
             t.set_fontsize(size2)
         cbar.set_label('Bandgap [eV]', fontsize=size1)
 
-        plt.annotate("Fe", xy=(data_dict[Iron+'_'+Intermediates[0]+'_Fe_Energy'],data_dict[Iron+'_'+Intermediates[1]+'_Fe_Energy']), xytext=(data_dict[Iron+'_'+Intermediates[0]+'_Fe_Energy']+0.15,data_dict[Iron+'_'+Intermediates[1]+'_Fe_Energy']-0.1),fontsize=size2-4,arrowprops=dict(arrowstyle="->"))
-        
+        plt.annotate("Fe", xy=(data_dict[Iron+'_'+Intermediates[0]+'_Fe_Energy']+0.02,data_dict[Iron+'_'+Intermediates[1]+'_Fe_Energy']+0.02), xytext=(data_dict[Iron+'_'+Intermediates[0]+'_Fe_Energy']+0.15,data_dict[Iron+'_'+Intermediates[1]+'_Fe_Energy']+0.04),fontsize=size2-4,arrowprops=dict(arrowstyle="->"))
+        plt.plot([-5,5],[-5,5],'k--')
         plt.xticks(fontsize=size2)
         plt.yticks(fontsize=size2)
         plt.xlabel('$\Delta$E$_{%s^*}$ [eV]' % Intermediates[0],fontsize=size1)
         plt.ylabel('$\Delta$E$_{%s^*}$ [eV]' % Intermediates[1],fontsize=size1)
         
+        if Intermediates[0]=='OH':
+            plt.ylim([1.0,3.5])
+            plt.xlim([0.0,2.5])
+        else:
+            plt.ylim([-0.3,2.2])
+            plt.xlim([0.0,2.5])
 
         plt.savefig(Iron+'Fe_with_'+Intermediates[0]+'vs'+Intermediates[1]+'_BG_SPIN.png', dpi=400, bbox_inches='tight')
         plt.show()
@@ -336,12 +343,19 @@ for k in range(0,len(data_dict['3_O_Label'])):
     ydat4.append(data_dict['3_O_Bandgap'][k])
     zdat4.append(data_dict['3_O_Dist_max'][k])
 p4=plt.scatter(xdat4,ydat4,c=zdat4, vmin=0, vmax=1, s=sdot,marker='p', cmap=cm,edgecolors= "black",label=r'H$_2$O $\rightarrow$ $^*$O+2(H$^+$ +e$^-$)')
+plt.scatter(data_dict['3_O_Fe_Energy']+0.05,data_dict['3_O_Fe_bandgap'],c=data_dict['3_O_Fe_dist'], vmin=0, vmax=1, s=sdot,marker='p', cmap=cm,edgecolors= "black")
+
 
 Iron='3'; Intermediates='H';
 plt.annotate("Fe",weight="bold", xy=(-1*(data_dict[Iron+'_'+Intermediates+'_Fe_Energy']+0.2),data_dict[Iron+'_'+Intermediates+'_Fe_bandgap']), xytext=(-1*(data_dict[Iron+'_'+Intermediates+'_Fe_Energy']+0.2)+0.15,data_dict[Iron+'_'+Intermediates+'_Fe_bandgap']+0.05),fontsize=size2-4,arrowprops=dict(arrowstyle="->"))
 
 Iron='3'; Intermediates='OH';
 plt.annotate("Fe",weight="bold", xy=(data_dict[Iron+'_'+Intermediates+'_Fe_Energy']+0.35-0.3,data_dict[Iron+'_'+Intermediates+'_Fe_bandgap']), xytext=(data_dict[Iron+'_'+Intermediates+'_Fe_Energy']-0.2+0.35-0.3,data_dict[Iron+'_'+Intermediates+'_Fe_bandgap']+0.0),fontsize=size2-4,arrowprops=dict(arrowstyle="->"))
+
+
+Iron='3'; Intermediates='O';
+plt.annotate("Fe",weight="bold", xy=(data_dict[Iron+'_'+Intermediates+'_Fe_Energy']+0.05,data_dict[Iron+'_'+Intermediates+'_Fe_bandgap']), xytext=(data_dict[Iron+'_'+Intermediates+'_Fe_Energy']+0.05,data_dict[Iron+'_'+Intermediates+'_Fe_bandgap']-0.1),fontsize=size2-4,arrowprops=dict(arrowstyle="->"))
+
 
 def sigmoid(x,mi, mx): return mi + (mx-mi)*(lambda t: (1+200**(-t+2.0))**(-1) )( (x-mi)/(mx-mi) )
 x = np.linspace(-4,7,1000)
@@ -358,7 +372,7 @@ plt.fill_between(x+0.2,sigmoid(x, 0.0, 0.4),color='r',alpha=0.2)
 legend1=plt.legend([p1], [r'(H$^+$ +e$^-$) $\rightarrow$ H$^*$'], loc=2, fontsize=size2)
 legend2=plt.legend([p2,p3,p4], [r'H$^*$ $\rightarrow$ (H$^+$ +e$^-$)',r'H$_2$O $\rightarrow$ $^*$OH+(H$^+$ +e$^-$)',r'H$_2$O $\rightarrow$ $^*$O+2(H$^+$ +e$^-$)'], loc=1, fontsize=size2)
 plt.gca().add_artist(legend1)
-plt.text(-1.8, 0.85, r'$\bf{b}$ Fe-MOF-525', ha='left', fontsize=size2+14)
+plt.text(-1.8, 1.05, r'$\bf{b}$ Fe-MOF-525', ha='left', fontsize=size2+14)
 
 plt.text(-1.48, 0.02, r'Reduction', ha='left', fontsize=size2)
 plt.text(1.58, 0.02, r'Oxidation', ha='left', fontsize=size2)
@@ -370,10 +384,88 @@ plt.xlabel('E / V$_{RHE}$ [eV]', fontsize=size1)
 plt.ylabel('Bandgap [eV]', fontsize=size1)
 plt.plot([0,0],[0,1],'k-',linewidth=4)
 #plt.title(Iron+'Fe with ' +Intermediates)
-plt.ylim([0,0.8])
+plt.ylim([0,1.0])
 plt.xlim([-1.5,2.0])
 #plt.axis([-1, 1, -1, 10])
 #plt.savefig(Iron+'Fe_with_'+Intermediates+'_SPIN.png', dpi=400, bbox_inches='tight')
 plt.savefig('3Fe_with_SPIN_potential_map.png', dpi=400, bbox_inches='tight')
 plt.show()
-     
+
+####################################
+### Viewing lowest lying structures
+####################################
+
+# Iron='3'
+# # Finding structure
+# ymin_arg=np.argmin(data_dict_match[Iron+'_'+'H'+'_'+'COOH'+'_datay'])
+# # Finding id's
+# xid=data_dict_match[Iron+'_'+'H'+'_'+'COOH'+'_id1'][ymin_arg]
+# yid=data_dict_match[Iron+'_'+'H'+'_'+'COOH'+'_id2'][ymin_arg]
+
+# name_db='data/MOF525_3Fe_H_PW_spin.db'
+# # #Check structure
+# a = read(name_db+'@ads=%s' % xid)
+# val=-1
+# chemsym=a[0].get_chemical_symbols()
+# print(chemsym[val])
+# chemsym[val]='S'
+# a[0].set_chemical_symbols(chemsym)
+# view(a[0])
+
+# name_db='data/MOF525_3Fe_COOH_PW_spin.db'
+# # #Check structure
+# a = read(name_db+'@ads=%s' % yid)
+# val=-4
+# chemsym=a[0].get_chemical_symbols()
+# print(chemsym[val])
+# chemsym[val]='S'
+# a[0].set_chemical_symbols(chemsym)
+# view(a[0])
+
+Iron='3'
+# Finding structure
+ymin_arg=np.argmin(data_dict_match[Iron+'_'+'OH'+'_'+'O'+'_datax'])
+# Finding id's
+xid=data_dict_match[Iron+'_'+'OH'+'_'+'O'+'_id1'][ymin_arg]
+yid=data_dict_match[Iron+'_'+'OH'+'_'+'O'+'_id2'][ymin_arg]
+
+name_db='data/MOF525_3Fe_OH_PW_spin.db'
+# #Check structure
+a = read(name_db+'@ads=%s' % xid)
+val=-2
+chemsym=a[0].get_chemical_symbols()
+print(chemsym[val])
+chemsym[val]='S'
+a[0].set_chemical_symbols(chemsym)
+view(a[0])
+
+name_db='data/MOF525_3Fe_O_PW_spin.db'
+# #Check structure
+a = read(name_db+'@ads=%s' % yid)
+val=-1
+chemsym=a[0].get_chemical_symbols()
+print(chemsym[val])
+chemsym[val]='S'
+a[0].set_chemical_symbols(chemsym)
+view(a[0])
+
+
+# Check special structure
+
+ymin_arg=np.argmin(data_dict['3_O_Energy'])
+id=data_dict['3_O_Label'][ymin_arg]
+
+name_db='data/MOF525_3Fe_O_PW_spin.db'
+# #Check structure
+a = read(name_db+'@ads=%s' % id)
+val=-1
+chemsym=a[0].get_chemical_symbols()
+print(chemsym[val])
+chemsym[val]='S'
+a[0].set_chemical_symbols(chemsym)
+view(a[0])
+
+
+
+
+

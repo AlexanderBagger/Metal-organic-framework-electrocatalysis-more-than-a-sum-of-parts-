@@ -33,7 +33,9 @@ iron=['0']
 data_dict={}
 
 size1=28;size2=20; sdot=150
-        
+
+dis_max_test=0.8
+
 cm = plt.cm.get_cmap('RdYlBu')
 for Intermediates in intermediates:
     for Iron in iron:
@@ -58,67 +60,60 @@ for Intermediates in intermediates:
         Fe_Id=np.empty(int(Iron)); Fe_Bandgap.fill(0)
         
         for row in con1.select(relax='PW'):
-            label_con1.append(row.ads)
-            
-            if Intermediates=='H':
-                Energy_con1.append(row.energy-ESlab-EH)
-            elif Intermediates=='remove_H':
-                Energy_con1.append(row.energy-ESlab+EH)
-            elif Intermediates=='O':
-                Energy_con1.append(row.energy-ESlab+2*EH-EH2O)
-            elif Intermediates=='OH':
-                Energy_con1.append(row.energy-ESlab+EH-EH2O)
-            elif Intermediates=='CO':
-                Energy_con1.append(row.energy-ESlab-ECO)
-            elif Intermediates=='COOH':
-                Energy_con1.append(row.energy-ESlab-ECO-EH2O+EH)
-                
-            BG_con1.append(row.bandgap)
 
 # Getting the distances    
             a = read(name_db+'@relax=PW,ads=%s' % row.ads)
             newpos=a[0].get_positions()
             if (Intermediates=='H' or Intermediates=='O'):
                 distances=np.sum((POS_O-newpos[:-1])**2,1)**(1/2)
+                if distances.max()< dis_max_test:
+                    if Intermediates=='H':
+                        Energy_con1.append(row.energy-ESlab-EH)
+                        dist_max.append(distances.max())
+                        label_con1.append(row.ads)
+                        BG_con1.append(row.bandgap)
+                    elif Intermediates=='O':
+                        Energy_con1.append(row.energy-ESlab+2*EH-EH2O)
+                        dist_max.append(distances.max())
+                        label_con1.append(row.ads)
+                        BG_con1.append(row.bandgap)
+                    
             elif (Intermediates=='CO' or Intermediates=='OH'):
                 distances=np.sum((POS_O-newpos[:-2])**2,1)**(1/2)
-            elif (Intermediates=='COOH' or Intermediates=='OH'):
+                if distances.max()< dis_max_test:
+                    if Intermediates=='OH':
+                        Energy_con1.append(row.energy-ESlab+EH-EH2O)
+                        dist_max.append(distances.max())
+                        label_con1.append(row.ads)
+                        BG_con1.append(row.bandgap)
+                    elif Intermediates=='CO':
+                        Energy_con1.append(row.energy-ESlab-ECO)
+                        dist_max.append(distances.max())
+                        label_con1.append(row.ads)
+                        BG_con1.append(row.bandgap)
+                
+            elif Intermediates=='COOH':
                 distances=np.sum((POS_O-newpos[:-4])**2,1)**(1/2)
+                if distances.max()< dis_max_test:
+                    Energy_con1.append(row.energy-ESlab-ECO-EH2O+EH)
+                    dist_max.append(distances.max())
+                    label_con1.append(row.ads)
+                    BG_con1.append(row.bandgap)
+                    
             elif Intermediates=='remove_H':
                 POS_O=original.get_positions()
                 val=row.ads
                 POS_O=np.delete(POS_O, val, 0)
                 distances=np.sum((POS_O-newpos)**2,1)**(1/2)
+                if distances.max()< dis_max_test:
+                    Energy_con1.append(row.energy-ESlab+EH)
+                    dist_max.append(distances.max())
+                    label_con1.append(row.ads)
+                    BG_con1.append(row.bandgap)
+                
             #print(distances.max())
-            dist_max.append(distances.max())
 
 
-        #atomsobj=con1.get_atoms(ads=395,relax='PW')
-        #chemsym=atomsobj.get_chemical_symbols()
-        #chemsym[-1]='S'
-        #atomsobj.set_chemical_symbols(chemsym)
-        #view(atomsobj)
-
-
-        
-        # plt.figure()
-        # plt.locator_params(axis='x',nbins=5);plt.grid(True);plt.locator_params(axis='y',nbins=5)
-        # plt.annotate(Iron+'Fe with '+Intermediates, xy=(0.03, 0.9), xycoords='axes fraction', fontsize=size2-4,
-        #              bbox=dict(boxstyle='round',facecolor='white', alpha=1.0),
-        #              horizontalalignment='left', verticalalignment='bottom')
-        # plt.scatter(Energy_con1,BG_con1,c=dist_max, vmin=0, vmax=1, s=sdot, cmap=cm,edgecolors= "black")
-
-        # cbar=plt.colorbar()
-        # cbar.set_label('Max dist [Ang]', fontsize=size1)
-        # plt.xticks(fontsize=size2)
-        # plt.yticks(fontsize=size2)
-        # plt.xlabel('Energy [eV]', fontsize=size1)
-        # plt.ylabel('Direct Bandgap [eV]', fontsize=size1)
-        # #plt.title(Iron+'Fe with ' +Intermediates)
-        # plt.ylim([0,1.5])
-        # #plt.axis([-1, 1, -1, 10])
-        # plt.savefig(Iron+'Fe_with_'+Intermediates+'.png', dpi=400, bbox_inches='tight')
-        # plt.show()
         
 # Save values to dictunary
         data_dict[Iron+'_'+Intermediates+'_Label']=label_con1
@@ -138,7 +133,7 @@ for Intermediates in intermediates:
 
 # # Matching binding sites:
 data_dict_match={}
-for Intermediates in zip(['H','OH'],['COOH','O']):
+for Intermediates in zip(['H','OH'],['COOH','O']):#zip(['OH'],['O']):
     for Iron in iron:
         print('Intermediates: ' ,Intermediates)
         print('Fe: ', Iron)
@@ -157,7 +152,7 @@ for Intermediates in zip(['H','OH'],['COOH','O']):
             zminGab2=10
             id1min=1
             id2min=1
-            distmin=10
+            distmin=2
             for p in range(0,len(data_dict[Iron+'_'+Intermediates[1]+'_Label'])):
                     a1 = read(folder+'MOF525_'+Iron+'Fe_'+Intermediates[0]+'_PW.db@relax=PW,ads=%s' % data_dict[Iron+'_'+Intermediates[0]+'_Label'][k])
                     newpos1=a1[0].get_positions()
@@ -192,13 +187,13 @@ for Intermediates in zip(['H','OH'],['COOH','O']):
                         # dataz.append(data_dict['1_H_Bandgap'][k])
                         # id1.append(data_dict['1_H_Label'][k])
                         # id2.append(data_dict['1_COOH_Label'][p])
-            datax.append(xmin)
-            datay.append(ymin)
-            dataGab1.append(zminGab1)
-            dataGab2.append(zminGab2)
-            id1.append(id1min)
-            id2.append(id2min)
-            dist.append(distmin)      
+                            datax.append(xmin)
+                            datay.append(ymin)
+                            dataGab1.append(zminGab1)
+                            dataGab2.append(zminGab2)
+                            id1.append(id1min)
+                            id2.append(id2min)
+                            dist.append(distmin)      
 
         data_dict_match[Iron+'_'+Intermediates[0]+'_'+Intermediates[1]+'_datax']=datax
         data_dict_match[Iron+'_'+Intermediates[0]+'_'+Intermediates[1]+'_datay']=datay
@@ -211,32 +206,38 @@ for Intermediates in zip(['H','OH'],['COOH','O']):
         
         
 # Plot scaling :
-for Intermediates in zip(['H','OH'],['COOH','O']):
+for Intermediates in zip(['H','OH'],['COOH','O']): #zip(['OH'],['O']):
     for Iron in iron:
         plt.figure()
         if Intermediates[0]=='H':
-            plt.text(-1.0, 1.35, r'$\bf{a}$ MOF-525', ha='left', fontsize=size1)
+            plt.text(-0.5, 1.6, r'$\bf{a}$ MOF-525', ha='left', fontsize=size1)
         else:
-            plt.text(1.0, 6.5, r'$\bf{b}$ MOF-525', ha='left', fontsize=size1)
+            plt.text(1.0, 3.1, r'$\bf{b}$ MOF-525', ha='left', fontsize=size1)
 
-        plt.locator_params(axis='x',nbins=5);plt.grid(True);plt.locator_params(axis='y',nbins=5)
+        plt.locator_params(axis='x',nbins=5);plt.grid(True);#plt.locator_params(axis='y',nbins=5)
         plt.scatter(data_dict_match[Iron+'_'+Intermediates[0]+'_'+Intermediates[1]+'_datax'],data_dict_match[Iron+'_'+Intermediates[0]+'_'+Intermediates[1]+'_datay']
                     ,c=data_dict_match[Iron+'_'+Intermediates[0]+'_'+Intermediates[1]+'_dataGab1'], vmin=0, vmax=1.5, s=sdot, cmap=cm,edgecolors= "black")
         cbar=plt.colorbar(ticks=[0.0, 0.5, 1.0,1.5])
         for t in cbar.ax.get_yticklabels():
             t.set_fontsize(size2)
-        cbar.set_label('Bandgap [eV]', fontsize=size1-4)
-
+        cbar.set_label('Bandgap [eV]', fontsize=size1)
+        plt.plot([-5,5],[-5,5],'k--')
         
         plt.xticks(fontsize=size2)
         if Intermediates[0]=='H':
-            plt.yticks([-1,0,1],['-1','0','1'],fontsize=size2)
+            plt.yticks([0,0.5,1,1.5],['0.0','0.5','1.0','1.5'],fontsize=size2)
         else:
-            plt.yticks(fontsize=size2)
-        plt.xlabel('$\Delta$E$_{%s^*}$ [eV]' % Intermediates[0],fontsize=size1-4)
-        plt.ylabel('$\Delta$E$_{%s^*}$ [eV]' % Intermediates[1],fontsize=size1-4)
+            plt.yticks([2,2.5,3.0],['2.0','2.5','3.0'],fontsize=size2)
+        plt.xlabel('$\Delta$E$_{%s^*}$ [eV]' % Intermediates[0],fontsize=size1)
+        plt.ylabel('$\Delta$E$_{%s^*}$ [eV]' % Intermediates[1],fontsize=size1)
         
-
+        if Intermediates[0]=='OH':
+            plt.ylim([1.9,3])
+            plt.xlim([1.4,3])
+        else:
+            plt.ylim([0.0,1.5])
+            plt.xlim([-0.2,1.3])
+            
         plt.savefig(Iron+'Fe_with_'+Intermediates[0]+'vs'+Intermediates[1]+'_BG.png', dpi=400, bbox_inches='tight')
         plt.show()
         
@@ -251,7 +252,10 @@ for Intermediates in zip(['H','OH'],['COOH','O']):
         for t in cbar.ax.get_yticklabels():
             t.set_fontsize(size2)
         cbar.set_label('dist [Ang]', fontsize=size1)
+
+        plt.plot([-5,5],[-5,5],'k--')
         
+
         plt.xticks(fontsize=size2)
         if Intermediates[0]=='H':
             plt.yticks([-1,0,1],['-1','0','1'],fontsize=size2)
@@ -259,6 +263,12 @@ for Intermediates in zip(['H','OH'],['COOH','O']):
             plt.yticks(fontsize=size2)
         plt.xlabel('$\Delta$E$_{%s^*}$ [eV]' % Intermediates[0],fontsize=size1)
         plt.ylabel('$\Delta$E$_{%s^*}$ [eV]' % Intermediates[1],fontsize=size1)
+        if Intermediates[0]=='OH':
+            plt.ylim([1.9,3])
+            plt.xlim([1.4,3])
+        else:
+            plt.ylim([0.0,1.5])
+            plt.xlim([-0.2,1.3])
         plt.savefig(Iron+'Fe_with_'+Intermediates[0]+'vs'+Intermediates[1]+'_dist.png', dpi=400, bbox_inches='tight')
         plt.show()
 
@@ -311,8 +321,8 @@ p4=plt.scatter(xdat4,ydat4,c=zdat4, vmin=0, vmax=1, s=sdot,marker='p', cmap=cm,e
 
 def sigmoid(x,mi, mx): return mi + (mx-mi)*(lambda t: (1+16000**(-t+0.5))**(-8) )( (x-mi)/(mx-mi) )
 x = np.linspace(-4,7,1000)
-plt.plot(x+0.2-0.6, sigmoid(x, 0.0, 1.5),'b-', lw=3, alpha=0.5)
-plt.fill_between(x+0.2-0.6,sigmoid(x, 0.0, 1.5),color='b',alpha=0.2)
+plt.plot(x+0.2-0.2, sigmoid(x, 0.0, 1.5),'b-', lw=3, alpha=0.5)
+plt.fill_between(x+0.2-0.2,sigmoid(x, 0.0, 1.5),color='b',alpha=0.2)
 
 def sigmoid(x,mi, mx): return mi + (mx-mi)*(lambda t: (1+16000**(t-0.5))**(-12) )( (x-mi)/(mx-mi) )
 x = np.linspace(-4,7,1000)
@@ -341,4 +351,35 @@ plt.xlim([-1.5,2.0])
 #plt.axis([-1, 1, -1, 10])
 plt.savefig('0Fe_with_SPIN_potential_map.png', dpi=400, bbox_inches='tight')
 plt.show()
-     
+
+
+####################################
+### Viewing lowest lying structures
+####################################
+
+# # Finding structure
+ymin_arg=np.argmin(data_dict_match[Iron+'_'+'H'+'_'+'COOH'+'_datay'])
+
+# Finding id's
+xid=data_dict_match[Iron+'_'+'H'+'_'+'COOH'+'_id1'][ymin_arg]
+yid=data_dict_match[Iron+'_'+'H'+'_'+'COOH'+'_id2'][ymin_arg]
+
+name_db='data/MOF525_0Fe_H_PW.db'
+# #Check structure
+a = read(name_db+'@ads=%s' % xid)
+val=-1
+chemsym=a[0].get_chemical_symbols()
+print(chemsym[val])
+chemsym[val]='S'
+a[0].set_chemical_symbols(chemsym)
+view(a[0])
+
+name_db='data/MOF525_0Fe_COOH_PW.db'
+# #Check structure
+a = read(name_db+'@ads=%s' % yid)
+val=-4
+chemsym=a[0].get_chemical_symbols()
+print(chemsym[val])
+chemsym[val]='S'
+a[0].set_chemical_symbols(chemsym)
+view(a[0])
